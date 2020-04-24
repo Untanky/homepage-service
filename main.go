@@ -8,6 +8,8 @@ import (
 )
 
 func main() {
+	Init()
+
 	service := gin.Default()
 
 	api := service.Group("/api/v1")
