@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	web "homepage-service/service"
+
 )
 
 func main() {
@@ -17,6 +18,7 @@ func main() {
 	api.GET("/health", handleHealth)
 
 	web.SetupPortfolioService(api.Group("/portfolio"))
+	web.SetupBlogService(api.Group("/post"))
 
 	err := http.ListenAndServe(":8080", service)
 

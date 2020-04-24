@@ -1,11 +1,21 @@
 package service
 
 import (
+	"github.com/Kamva/mgm/v2"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func getPosts(context *gin.Context) {
-	context.Status(401)
+	raw := []bson.M{}
+
+	err := mgm.CollectionByName("posts").SimpleFind(&raw, bson.M{})
+
+	if err != nil {
+		context.Status(500)
+	}
+
+	context.JSON(200, raw)
 }
 
 func getPost(context *gin.Context) {
