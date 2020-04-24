@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	Init()
+	InitDB()
 
 	service := gin.Default()
 

@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func Init() {
+func InitDB() {
 	err := mgm.SetDefaultConfig(nil, "mgm_lab", options.Client().ApplyURI(os.Getenv("MONGODB_URI")))
 
 	if err != nil {
