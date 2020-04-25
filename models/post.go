@@ -1,8 +1,10 @@
 package models
 
 import (
+	"fmt"
 	"github.com/Kamva/mgm/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"homepage-service/url"
 )
 
 type content struct {
@@ -41,4 +43,39 @@ type Post struct {
 	Created	          primitive.DateTime    `json:"created" bson:"created"`
 	Updated           primitive.DateTime    `json:"updated" bson:"updated"`
 	Section           []section             `json:"section" bson:"section"`
+}
+
+func (post *Post) GeneratePreview() Preview {
+	var previewText string
+	var imageUrl string
+	var imageAltText string
+
+	for _, value := range post.Section {
+		for _, content := range value.Content {
+			if content.Type == "TEXT" {
+				previewText += content.Text
+			}
+
+			if imageUrl == "" && content.Type == "IMAGE" {
+				imageUrl = content.Source
+				imageAltText = content.AlternateText
+			}
+		}
+	}
+	
+	postUrl := fmt.Sprintf("%s/%d", "/blog", post.Id)
+	dataUrl := fmt.Sprintf("%s/%d", url.PostPath, post.Id)
+
+	return Preview{
+		Id:         post.Id,
+		Title:      post.Title,
+		Author:     post.Author,
+		Created:    post.Created,
+		Updated:    post.Updated,
+		Text:       previewText,
+		PostUrl:    postUrl,
+		ImageUrl:   imageUrl,
+		ImageAltText: imageAltText,
+		DataUrl:    dataUrl,
+	}
 }
