@@ -35,7 +35,7 @@ func main() {
 	api.GET("/health", handleHealth)
 
 	web.SetupPortfolioService(api.Group("/portfolio"))
-	web.SetupBlogService(api.Group("/post"))
+	web.SetupBlogService(api.Group("/blog"))
 
 	err := http.ListenAndServe(":8080", service)
 

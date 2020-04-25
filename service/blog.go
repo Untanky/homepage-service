@@ -8,6 +8,9 @@ import (
 	"strconv"
 )
 
+var postPath string
+var previewPath string
+
 func getPost(context *gin.Context) {
 	id, err := strconv.ParseInt(context.Param("id"), 10, 32)
 
@@ -64,4 +67,7 @@ func SetupBlogService(api *gin.RouterGroup) {
 	previewApi.GET("/", getPostPreviews)
 	previewApi.GET("/new", getPreviewOfNewPosts)
 	previewApi.GET("/popular", getPreviewOfPopularPosts)
+
+	postPath = postApi.BasePath()
+	previewPath = previewApi.BasePath()
 }
