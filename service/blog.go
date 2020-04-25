@@ -4,12 +4,13 @@ import (
 	"github.com/Kamva/mgm/v2"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
+	"homepage-service/models"
 )
 
 func getPosts(context *gin.Context) {
-	raw := []bson.M{}
+	raw := []models.Post{}
 
-	err := mgm.CollectionByName("posts").SimpleFind(&raw, bson.M{})
+	err := mgm.Coll(&models.Post{}).SimpleFind(&raw, bson.M{})
 
 	if err != nil {
 		context.Status(500)
