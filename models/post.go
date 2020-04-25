@@ -5,38 +5,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type textContent struct {
-	Text string `json:"text" bson:"text"`
-}
-
-type videoContent struct {
-	VideoId string `json:"videoId" bson:"videoId"`
-}
-
-type linkContent struct {
-	Link               string `json:"link" bson:"link"`
-	ImageUrl           string `json:"imageUrl" bson:"imageUrl"`
-	ImageAlternateText string `json:"imageAltText" bson:"imageAltText"`
-}
-
-type imageContent struct {
-	Source        string `json:"src" bson:"src"`
-	AlternateText string `json:"alt" bson:"alt"`
-}
-
-type codeContent struct {
-	Language string `json:"language" bson:"language"`
-	Code string `json:"code" bson:"code"`
-}
-
-type caption struct {
-	Caption string `json:"caption" bson:"caption"`
-}
-
-type sectionContent struct {
-	Title string `json:"title" bson:"title"`
-}
-
 type content struct {
 	Type string `json:"type" bson:"type"`
 
