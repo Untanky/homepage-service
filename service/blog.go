@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"github.com/Kamva/mgm/v2"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -71,7 +70,31 @@ func getPostPreviews(context *gin.Context) {
 	context.JSON(200, previews)
 }
 
-const pageSize = 3
+const pageSize = 6
+
+func pageData(context *gin.Context) (int, int) {
+	var first = int64(0)
+
+	if start, _ := context.GetQuery("start"); start != "" {
+		if num, err := strconv.ParseInt(start, 10, 32); err == nil {
+			first = num
+		}
+	}
+
+	var last = first + pageSize
+
+	if end, _ := context.GetQuery("end"); end != "" {
+		if num, err := strconv.ParseInt(end, 10, 32); err == nil {
+			last = num
+		}
+
+		if last - first > pageSize {
+			last = first + pageSize
+		}
+	}
+
+	return int(first), int(last)
+}
 
 func getPreviewOfNewPosts(context *gin.Context) {
 	coll := mgm.Coll(&models.Post{})
@@ -104,7 +127,21 @@ func getPreviewOfNewPosts(context *gin.Context) {
 		previews = append(previews, raw[i].GeneratePreview())
 	}
 
-	context.JSON(200, previews)
+	first, last := pageData(context)
+
+	if first < 0 {
+		first = 0
+	}
+
+	if last >= len(previews) {
+		last = len(previews)
+	}
+
+	if last < first {
+		context.String(400, "Wrong pagination")
+	}
+
+	context.JSON(200, previews[first:last])
 }
 
 func getPreviewOfPopularPosts(context *gin.Context) {
@@ -128,38 +165,7 @@ func SetupBlogService(api *gin.RouterGroup) {
 	previewApi.GET("/new", getPreviewOfNewPosts)
 	previewApi.GET("/popular", getPreviewOfPopularPosts)
 	previewApi.GET("/for/:id", getPreviewsForPost)
-	previewApi.GET("/test", test)
 
 	url.PostPath = postApi.BasePath()
 	url.PreviewPath = previewApi.BasePath()
-}
-
-func test(context *gin.Context) {
-	var first, last int64
-
-	if start, _ := context.GetQuery("start"); start != "" {
-		if num, err := strconv.ParseInt(start, 10, 32); err != nil {
-			first = 0
-		} else {
-			first = num
-		}
-	} else {
-		first = 0
-	}
-
-	if end, _ := context.GetQuery("end"); end != "" {
-		if num, err := strconv.ParseInt(end, 10, 32); err != nil {
-			last = first + pageSize
-		} else {
-			last = num
-		}
-
-		if last - first > pageSize {
-			last = first + pageSize
-		}
-	} else {
-		last = first + pageSize
-	}
-
-	context.String(200, fmt.Sprintf("%d - %d", first, last))
 }
