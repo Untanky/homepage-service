@@ -12,6 +12,7 @@ func SetupPortfolioService(api *gin.RouterGroup) {
 	api.GET("/skills", getSkills)
 	api.GET("/categories", getCategories)
 	api.GET("/strengths", getStrengths)
+	api.GET("/languages", getLanguages)
 }
 
 func getEducation(context *gin.Context) {
@@ -58,6 +59,16 @@ func getCategories(context *gin.Context) {
 
 func getStrengths(context *gin.Context) {
 	data, err := ioutil.ReadFile("data/strengths.json")
+
+	if err != nil {
+		context.Status(500)
+	}
+
+	context.Data(200, "application/json", data)
+}
+
+func getLanguages(context *gin.Context) {
+	data, err := ioutil.ReadFile("data/languages.json")
 
 	if err != nil {
 		context.Status(500)
