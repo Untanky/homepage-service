@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"homepage-service/models"
 	"homepage-service/url"
+	"math"
 	"sort"
 	"strconv"
 )
@@ -42,33 +43,41 @@ func deletePost(context *gin.Context) {
 	context.Status(501)
 }
 
-func getPostPreviews(context *gin.Context) {
-	coll := mgm.Coll(&models.Post{})
-
-	ctx := mgm.Ctx()
-	data, err := coll.Find(ctx, bson.M{})
-
-	if err != nil {
-		context.String(500, err.Error())
-		return
-	}
-
-	raw := []models.Post{}
-	err = data.All(ctx, &raw)
-
-	if err != nil {
-		context.String(404, "Not found")
-		return
-	}
-
-	var previews []models.Preview
-
-	for i := range raw {
-		previews = append(previews, raw[i].GeneratePreview())
-	}
-
-	context.JSON(200, previews)
+func viewPost(context *gin.Context) {
+	context.Status(501)
 }
+
+func lovePost(context *gin.Context) {
+	context.Status(501)
+}
+
+//func getPostPreviews(context *gin.Context) {
+//	coll := mgm.Coll(&models.Post{})
+//
+//	ctx := mgm.Ctx()
+//	data, err := coll.Find(ctx, bson.M{})
+//
+//	if err != nil {
+//		context.String(500, err.Error())
+//		return
+//	}
+//
+//	raw := []models.Post{}
+//	err = data.All(ctx, &raw)
+//
+//	if err != nil {
+//		context.String(404, "Not found")
+//		return
+//	}
+//
+//	var previews []models.Preview
+//
+//	for i := range raw {
+//		previews = append(previews, raw[i].GeneratePreview())
+//	}
+//
+//	context.JSON(200, previews)
+//}
 
 const pageSize = 6
 
@@ -116,7 +125,7 @@ func getPreviewOfNewPosts(context *gin.Context) {
 	}
 
 	byDate := func(i, j int) bool {
-		return raw[i].Created.Time().Before(raw[j].Created.Time())
+		return raw[i].Created.Time().After(raw[j].Created.Time())
 	}
 
 	sort.Slice(raw, byDate)
@@ -145,11 +154,108 @@ func getPreviewOfNewPosts(context *gin.Context) {
 }
 
 func getPreviewOfPopularPosts(context *gin.Context) {
-	context.Status(501)
+	coll := mgm.Coll(&models.Post{})
+
+	ctx := mgm.Ctx()
+	data, err := coll.Find(ctx, bson.M{})
+
+	if err != nil {
+		context.String(500, err.Error())
+		return
+	}
+
+	raw := []models.Post{}
+	err = data.All(ctx, &raw)
+
+	if err != nil {
+		context.String(404, "Not found")
+		return
+	}
+
+	byPopularity := func(i, j int) bool {
+		return raw[i].GetScore() > raw[j].GetScore()
+	}
+
+	sort.Slice(raw, byPopularity)
+
+	var previews []models.Preview
+
+	for i := range raw {
+		previews = append(previews, raw[i].GeneratePreview())
+	}
+
+	first, last := pageData(context)
+
+	if first < 0 {
+		first = 0
+	}
+
+	if last >= len(previews) {
+		last = len(previews)
+	}
+
+	if last < first {
+		context.String(400, "Wrong pagination")
+	}
+
+	context.JSON(200, previews[first:last])
 }
 
 func getPreviewsForPost(context *gin.Context) {
-	context.Status(501)
+	coll := mgm.Coll(&models.Post{})
+
+	ctx := mgm.Ctx()
+	data, err := coll.Find(ctx, bson.M{})
+
+	if err != nil {
+		context.String(500, err.Error())
+		return
+	}
+
+	raw := []models.Post{}
+	err = data.All(ctx, &raw)
+
+	if err != nil {
+		context.String(404, "Not found")
+		return
+	}
+
+	originalPostId, err := strconv.ParseInt(context.Param("id"), 10, 32)
+
+	if err != nil {
+		context.String(400, "Please provide integer as id")
+		return
+	}
+
+	byPost := func(i, j int) bool {
+		return math.Abs(float64(raw[i].Id - int(originalPostId))) < math.Abs(float64(raw[j].Id - int(originalPostId)))
+	}
+
+	sort.Slice(raw, byPost)
+
+	raw = raw[1:]
+
+	var previews []models.Preview
+
+	for i := range raw {
+		previews = append(previews, raw[i].GeneratePreview())
+	}
+
+	first, last := pageData(context)
+
+	if first < 0 {
+		first = 0
+	}
+
+	if last >= len(previews) {
+		last = len(previews)
+	}
+
+	if last < first {
+		context.String(400, "Wrong pagination")
+	}
+
+	context.JSON(200, previews[first:last])
 }
 
 func SetupBlogService(api *gin.RouterGroup) {
@@ -160,8 +266,11 @@ func SetupBlogService(api *gin.RouterGroup) {
 	postApi.PUT("/:id", updatePost)
 	postApi.DELETE("/:id", deletePost)
 
+	postApi.POST("/:id/view", viewPost)
+	postApi.POST("/:id/love", lovePost)
+
 	previewApi := api.Group("/preview")
-	previewApi.GET("/", getPostPreviews)
+	//previewApi.GET("/", getPostPreviews)
 	previewApi.GET("/new", getPreviewOfNewPosts)
 	previewApi.GET("/popular", getPreviewOfPopularPosts)
 	previewApi.GET("/for/:id", getPreviewsForPost)

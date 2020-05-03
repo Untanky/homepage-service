@@ -5,6 +5,7 @@ import (
 	"github.com/Kamva/mgm/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"homepage-service/url"
+	"strings"
 )
 
 type content struct {
@@ -43,7 +44,11 @@ type Post struct {
 	Created	          primitive.DateTime    `json:"created" bson:"created"`
 	Updated           primitive.DateTime    `json:"updated" bson:"updated"`
 	Section           []section             `json:"section" bson:"section"`
+	Views             int                   `json:"views" bson:"views"`
+	Loves             int                   `json:"loves" bson:"loves"`
 }
+
+const PREVIEW_TEXT_LENGTH = 520
 
 func (post *Post) GeneratePreview() Preview {
 	var previewText string
@@ -52,8 +57,13 @@ func (post *Post) GeneratePreview() Preview {
 
 	for _, value := range post.Section {
 		for _, content := range value.Content {
-			if content.Type == "TEXT" {
+			if content.Type == "TEXT" && len(previewText) <= PREVIEW_TEXT_LENGTH {
 				previewText += content.Text
+
+				if len(previewText) > PREVIEW_TEXT_LENGTH {
+					indexOfLastWord := strings.LastIndex(previewText[:PREVIEW_TEXT_LENGTH - 1], " ")
+					previewText = previewText[:indexOfLastWord]
+				}
 			}
 
 			if imageUrl == "" && content.Type == "IMAGE" {
@@ -62,6 +72,8 @@ func (post *Post) GeneratePreview() Preview {
 			}
 		}
 	}
+
+	previewText += "..."
 	
 	postUrl := fmt.Sprintf("%s/%d", "/blog", post.Id)
 	dataUrl := fmt.Sprintf("%s/%d", url.PostPath, post.Id)
@@ -78,4 +90,8 @@ func (post *Post) GeneratePreview() Preview {
 		ImageAltText: imageAltText,
 		DataUrl:    dataUrl,
 	}
+}
+
+func (post *Post) GetScore() int {
+	return post.Loves * 5 + post.Views
 }
