@@ -1,22 +1,32 @@
 package service
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
+	"path"
 )
 
-func SetupPortfolioService(api *gin.RouterGroup) {
-	api.GET("/education", getEducation)
-	api.GET("/experience", getExperience)
-	api.GET("/skills", getSkills)
-	api.GET("/categories", getCategories)
-	api.GET("/strengths", getStrengths)
-	api.GET("/languages", getLanguages)
+func getLanguagePathFromHeader(context *gin.Context) string {
+	lang := context.GetHeader("Accept-Language")
+	var langPath string
+
+	switch lang {
+	case "de":
+		langPath = "de"
+	case "en":
+		fallthrough
+	default:
+		langPath = "en"
+		break
+	}
+
+	return langPath
 }
 
 func getEducation(context *gin.Context) {
-	data, err := ioutil.ReadFile("data/education.json")
+	langPath := getLanguagePathFromHeader(context)
+
+	data, err := ioutil.ReadFile(path.Join("data", langPath, "education.json"))
 
 	if err != nil {
 		context.Status(500)
@@ -26,9 +36,9 @@ func getEducation(context *gin.Context) {
 }
 
 func getExperience(context *gin.Context) {
-	data, err := ioutil.ReadFile("data/experience.json")
+	langPath := getLanguagePathFromHeader(context)
 
-	fmt.Println(data)
+	data, err := ioutil.ReadFile(path.Join("data", langPath,"experience.json"))
 
 	if err != nil {
 		context.Status(500)
@@ -38,7 +48,9 @@ func getExperience(context *gin.Context) {
 }
 
 func getSkills(context *gin.Context) {
-	data, err := ioutil.ReadFile("data/skills.json")
+	langPath := getLanguagePathFromHeader(context)
+
+	data, err := ioutil.ReadFile(path.Join("data", langPath, "skills.json"))
 
 	if err != nil {
 		context.Status(500)
@@ -48,7 +60,9 @@ func getSkills(context *gin.Context) {
 }
 
 func getCategories(context *gin.Context) {
-	data, err := ioutil.ReadFile("data/categories.json")
+	langPath := getLanguagePathFromHeader(context)
+
+	data, err := ioutil.ReadFile(path.Join("data", langPath, "categories.json"))
 
 	if err != nil {
 		context.Status(500)
@@ -58,7 +72,9 @@ func getCategories(context *gin.Context) {
 }
 
 func getStrengths(context *gin.Context) {
-	data, err := ioutil.ReadFile("data/strengths.json")
+	langPath := getLanguagePathFromHeader(context)
+
+	data, err := ioutil.ReadFile(path.Join("data", langPath,"strengths.json"))
 
 	if err != nil {
 		context.Status(500)
@@ -68,11 +84,22 @@ func getStrengths(context *gin.Context) {
 }
 
 func getLanguages(context *gin.Context) {
-	data, err := ioutil.ReadFile("data/languages.json")
+	langPath := getLanguagePathFromHeader(context)
+
+	data, err := ioutil.ReadFile(path.Join("data", langPath,"languages.json"))
 
 	if err != nil {
 		context.Status(500)
 	}
 
 	context.Data(200, "application/json", data)
+}
+
+func SetupPortfolioService(api *gin.RouterGroup) {
+	api.GET("/education", getEducation)
+	api.GET("/experience", getExperience)
+	api.GET("/skills", getSkills)
+	api.GET("/categories", getCategories)
+	api.GET("/strengths", getStrengths)
+	api.GET("/languages", getLanguages)
 }
