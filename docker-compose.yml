@@ -3,6 +3,8 @@ services:
   web:
     # Usual docker setup stuff
     build: .
+    volumes:
+        - ./data:/app/data:ro
     # These labels are required for traefik to setup reverse proxy capabilities 
     labels:
       - "traefik.enable=true"
