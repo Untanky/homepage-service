@@ -17,6 +17,7 @@ func main() {
 	api.GET("/health", handleHealth)
 
 	web.SetupPortfolioService(api.Group("/portfolio"))
+	web.SetupProjectService(api.Group("/project"))
 
 	err := http.ListenAndServe(":8080", service)
 
