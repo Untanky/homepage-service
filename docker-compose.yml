@@ -1,0 +1,30 @@
+version: '3'
+services:
+  web:
+    # Usual docker setup stuff
+    build: .
+    volumes:
+        - ./data:/app/data:ro
+    # These labels are required for traefik to setup reverse proxy capabilities 
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.http.routers.homepage-webservice_router.rule=Host(`lukasgrimm.me`)&&PathPrefix(`/api`)"
+      - "traefik.http.routers.homepage-webservice_router.entrypoints=https"
+      - "traefik.http.routers.homepage-webservice_router.tls=true"
+      - "traefik.http.routers.homepage-api-service_router.rule=Host(`api.lukasgrimm.me`)&&PathPrefix(`/homepage`)"
+      - "traefik.http.routers.homepage-api-service_router.entrypoints=https"
+      - "traefik.http.routers.homepage-api-service_router.tls=true"
+      - "traefik.http.services.homepage-webservice_service.loadbalancer.server.port=8080"
+      - "traefik.http.middlewares.api-strip-prefix.stripprefix.prefixes=/homepage"
+      - "traefik.http.middlewares.api-add-prefix.addprefix.prefix=/api"
+        #- "traefik.http.middlewares.replace-prefix.chain.middlewares"
+      - "traefik.http.routers.homepage-api-service_router.middlewares=api-strip-prefix@docker,api-add-prefix@docker"
+        #- "traefik.http.routers.homepage-api-service_router.middlewares=api-add-prefix@docker"
+    # The container needs to be in the same network as 
+    # the traefik container, for traefik to recognize it
+    networks:
+      - web
+networks:
+  web:
+    external: true
