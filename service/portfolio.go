@@ -95,6 +95,18 @@ func getLanguages(context *gin.Context) {
 	context.Data(200, "application/json", data)
 }
 
+func getCV(context *gin.Context) {
+	langPath := getLanguagePathFromHeader(context)
+
+	data, err := ioutil.ReadFile(path.Join("data", langPath,"cv.pdf"))
+
+	if err != nil {
+		context.Status(500)
+	}
+
+	context.Data(200, "application/pdf", data)
+}
+
 func SetupPortfolioService(api *gin.RouterGroup) {
 	api.GET("/education", getEducation)
 	api.GET("/experience", getExperience)
@@ -102,4 +114,5 @@ func SetupPortfolioService(api *gin.RouterGroup) {
 	api.GET("/categories", getCategories)
 	api.GET("/strengths", getStrengths)
 	api.GET("/languages", getLanguages)
+	api.GET("/cv", getCV)
 }
